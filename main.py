@@ -1,26 +1,30 @@
 import os
 import datetime
 import smtplib
-import requests
 from email.message import EmailMessage
+from google import genai
+from google.genai.types import GenerateContentConfig, Tool, GoogleSearch
 
 def main():
     # 1. Pull secure credentials from environment variables
-    # Change your GitHub Secret variable name to OPENROUTER_API_KEY
-    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+    # We switch the secret name to GEMINI_API_KEY
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
     EMAIL_ADDRESS = os.environ.get("EMAIL_ADDRESS")
     EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD") # 16-character App Password
 
-    if not all([OPENROUTER_API_KEY, EMAIL_ADDRESS, EMAIL_PASSWORD]):
+    if not all([GEMINI_API_KEY, EMAIL_ADDRESS, EMAIL_PASSWORD]):
         raise ValueError("Missing required environment variables.")
 
+    # Initialize the official Google GenAI client
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    
     today = datetime.datetime.now().strftime("%A, %B %d, %Y")
 
     prompt = f"""
     Today's date is {today}.
     Act as an expert quantitative and technical stock market analyst for the Indian Stock Market (NSE/BSE). 
 
-    First, retrieve the most recent closing data of the US stock markets (S&P 500, Nasdaq, Dow Jones) from last night, and the current live morning trading level/movement of the Gift Nifty 50. 
+    First, execute a web search to retrieve the most recent closing data of the US stock markets (S&P 500, Nasdaq, Dow Jones) from last night, and the current live morning trading level/movement of the Gift Nifty 50. 
 
     Based on this global sentiment and current pre-market indicators, provide a highly structured intraday trading briefing for today. 
 
@@ -36,30 +40,18 @@ def main():
     Keep the output highly scannable using bolding and bullet points. Do not include generalized financial disclaimers; focus purely on the data and analysis.
     """
 
-    print("Querying OpenRouter for live market analysis...")
+    print("Executing live web search and generating watchlist with Gemini...")
     
-    # We hit OpenRouter's universal completions endpoint
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    # We use gemini-2.5-flash with Google Search Grounding explicitly turned on
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=GenerateContentConfig(
+            tools=[Tool(google_search=GoogleSearch())]
+        )
+    )
     
-    # We use a powerful free model variant that leverages online data routing
-    data = {
-        "model": "nvidia/nemotron-3-super-120b-a12b:free", 
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    }
-
-    response = requests.post(url, headers=headers, json=data)
-    
-    if response.status_code != 200:
-        raise RuntimeError(f"OpenRouter API Error: {response.text}")
-        
-    result_json = response.json()
-    analysis_text = result_json["choices"][0]["message"]["content"]
+    analysis_text = response.text
 
     # 2. Construct and dispatch the report via SMTP
     print("Drafting email notification...")
@@ -74,7 +66,7 @@ def main():
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
 
-    print("🚀 Success! OpenRouter Watchlist delivered to your inbox.")
+    print("🚀 Success! Grounded Gemini Watchlist delivered to your inbox.")
 
 if __name__ == "__main__":
     main()
