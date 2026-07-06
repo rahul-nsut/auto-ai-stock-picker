@@ -43,12 +43,12 @@ def main():
     print("Executing live web search and generating watchlist with Gemini...")
     
     response = client.models.generate_content(
-        model='gemini-3.1-pro-preview', 
+        model='gemini-2.5-pro', 
         contents=prompt,
         config=GenerateContentConfig(
             tools=[Tool(google_search=GoogleSearch())],
             thinking_config={
-                "thinking_budget": 4096 # Upped the reasoning budget to let 3.1 Pro deep-dive into the technical levels
+                "thinking_budget": 2048 # Upped the reasoning budget to let 3.1 Pro deep-dive into the technical levels
             }
         )
     )
