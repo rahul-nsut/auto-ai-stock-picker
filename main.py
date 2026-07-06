@@ -47,7 +47,7 @@ def main():
     
     # We use a powerful free model variant that leverages online data routing
     data = {
-        "model": "google/gemini-2.5-flash:free", 
+        "model": "nvidia/nemotron-3-super:free", 
         "messages": [
             {"role": "user", "content": prompt}
         ]
