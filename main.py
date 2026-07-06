@@ -43,7 +43,7 @@ def main():
     print("Executing live web search and generating watchlist with Gemini...")
     
     response = client.models.generate_content(
-        model='gemini-3-flash-preview', 
+        model='gemini-2.5-flash-preview', 
         contents=prompt,
         config=GenerateContentConfig(
             tools=[Tool(google_search=GoogleSearch())]
