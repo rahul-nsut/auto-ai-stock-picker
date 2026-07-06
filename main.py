@@ -42,12 +42,14 @@ def main():
 
     print("Executing live web search and generating watchlist with Gemini...")
     
-    # We use gemini-2.5-flash with Google Search Grounding explicitly turned on
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3.1-pro-preview', 
         contents=prompt,
         config=GenerateContentConfig(
-            tools=[Tool(google_search=GoogleSearch())]
+            tools=[Tool(google_search=GoogleSearch())],
+            thinking_config={
+                "thinking_budget": 4096 # Upped the reasoning budget to let 3.1 Pro deep-dive into the technical levels
+            }
         )
     )
     
