@@ -47,7 +47,7 @@ def main():
     
     # We use a powerful free model variant that leverages online data routing
     data = {
-        "model": "nvidia/nemotron-3-super:free", 
+        "model": "nvidia/nemotron-3-super-120b-a12b:free", 
         "messages": [
             {"role": "user", "content": prompt}
         ]
